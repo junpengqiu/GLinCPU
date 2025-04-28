@@ -9,6 +9,7 @@ class MockGPU:
     self.modelview_matrix = None
     self.projection_matrix = None
     self.normal_matrix = None
+    self.view_matrix = None
     self.viewport = None
 
     self.gl_Position = None  # equivalent to gl_Position
@@ -29,6 +30,9 @@ class MockGPU:
 
   def upload_projection_matrix(self, projection):
     self.projection_matrix = projection
+    
+  def upload_view_matrix(self, view):
+    self.view_matrix = view
 
   def upload_normal_matrix(self, normalmat):
     self.normal_matrix = normalmat
@@ -90,7 +94,8 @@ class MockGPU:
     if (self.viewport is None or
         self.gl_Position is None or
         self.vertPos is None or
-        self.normalInterp is None):
+        self.normalInterp is None or
+        self.view_matrix is None):
       raise ValueError("Viewport, gl_Position, vertPos, or normalInterp not set.")
 
     x0, y0, w, h = self.viewport
@@ -118,7 +123,7 @@ class MockGPU:
     
     # 4. Constants for fragment shader
     lightPos = np.array([0.0, 0.0, 3.0])
-    lightPos = self.modelview_matrix @ np.hstack((lightPos, 1))
+    lightPos = self.view_matrix @ np.hstack((lightPos, 1))
     lightPos = lightPos[:3] / lightPos[3] 
     lightColor = np.array([1.0, 1.0, 1.0])
     lightPower = 4.0
@@ -269,6 +274,7 @@ if __name__ == "__main__":
   gpu.upload_vertex_buffer(vertices)
   gpu.upload_vertex_normals(vertex_normals)
   gpu.upload_projection_matrix(P)
+  gpu.upload_view_matrix(V)
   gpu.set_viewport(0, 0, SCREEN_WIDTH, SCREEN_HEIGHT)
   delta_rad_Y = np.pi / 2.2 / 50
   for timestep in range(50):
